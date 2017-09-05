@@ -1,4 +1,3 @@
-from si_prefix import *
 from PIL import Image, ImageDraw
 
 import os.path
@@ -80,25 +79,37 @@ class Resistor:
 
     @resistance.setter
     def resistance(self,r):   
-        if r:
-            if type(r) is str:
-                self._resistance = si_parse(r)
-                self._resistance_si = r
-            else:
-                if r<0:raise ValueError('Invalid value provided for resistance')
-                self._resistance = r
-                self._resistance_si = si_format(r)
+ 
+        if r<0:raise ValueError('Invalid value provided for resistance')
+        self._resistance = r
         r_str = str(self._resistance)
-        band_1 = self._color_code[int(r_str[0])]
-        band_2 = self._color_code[int(r_str[1])]
-        exponent = si_prefix_expof10(self._resistance_si.split()[-1])
-        band_3 = self._color_code[int(exponent)-1]
-        band_4 = self._tolerance_code[self._tolerance]
-        self._code = (band_1, band_2, band_3, band_4)
 
-    @property
-    def resistance_si(self):
-        return self._resistance_si
+        exponent = int('{:e}'.format(self.resistance)[-3:])
+        
+        digits = ''
+        if self.resistance >= 10:
+            digits = r_str[:2]
+            band_3 = self._color_code[exponent-1]
+        else:
+            if r_str[0] == '0':
+                # check for instance where digit two is zero
+                if len(r_str.split('.')[-1])==1:
+                    r_str += '0'
+                digits = r_str[2:4]
+                band_3 = self._color_code[-2]
+            else:
+                digits = r_str[0] + r_str[2]
+                band_3 = self._color_code[-1]
+
+        band_1 = self._color_code[int(digits[0])]
+        band_2 = self._color_code[int(digits[1])]
+        band_4 = self._tolerance_code[self._tolerance]
+
+        self._code = (band_1, band_2, band_3, band_4)
+        self._min_resistance = self._resistance * (1-self._tolerance)
+        self._max_resistance = self._resistance * (1+self._tolerance)
+
+
 
     @property
     def tolerance(self):
@@ -107,8 +118,6 @@ class Resistor:
     @tolerance.setter
     def tolerance(self,t):
         self._tolerance = t
-        self._min_resistance = self._resistance * (1-self._tolerance)
-        self._max_resistance = self._resistance * (1+self._tolerance)
 
     @property
     def code(self):
@@ -136,7 +145,10 @@ class Resistor:
             self.resistance = resistance
 
     def __str__(self):
-        return "Resistance = " + self.resistance_si + "\tColor Code = " + '-'.join(self.code)
+        s = "R=" + str(self.resistance) + ", CODE=" + '-'.join(self.code)
+        s = s + ", R_MIN=" + str(self._min_resistance)
+        s = s + ", R_MAX=" + str(self._max_resistance)
+        return s
 
     def to_image(self, filename=None):
         band_rects = {0: [(118, 6), (138, 72)],
@@ -153,7 +165,7 @@ class Resistor:
                             'green' : '#008000',
                             'blue'  : '#000080',
                             'purple': '#800080',
-                            'grey'  : '#666666',
+                            'gray'  : '#666666',
                             'white' : '#FFFFFF',
                             'gold'  : '#D4A017',
                             'silver': '#B3B3B3',
@@ -168,10 +180,3 @@ class Resistor:
         else:
             im.show()
 
-            
-        
-
-
-        
-            
-        
