@@ -64,18 +64,6 @@ class Resistor:
                    'silver': -2}
 
     @property
-    def ten_pct_standards(self):
-        return self._ten_pct_standards
-
-    @property
-    def five_pct_standards(self):
-        return self._five_pct_standards
-
-    @property
-    def colors(self):
-        return self._colors
-
-    @property
     def resistance(self):
         return self._resistance
 
@@ -87,7 +75,7 @@ class Resistor:
         r_str = str(self._resistance)
 
         exponent = int('{:e}'.format(self.resistance)[-3:])
-        
+
         digits = ''
         if self.resistance >= 10:
             digits = r_str[:2]
@@ -127,7 +115,7 @@ class Resistor:
     def code(self, code):
         if type(code) is not tuple:
             raise TypeError('Expected a tuple: ex. ("red","red","red","gold")')
-        elif len(code) is not 4:
+        elif len(code) != 4:
             raise ValueError('Expected tuple of colors with len(code)==4')
         else:
             self._code = code
@@ -150,12 +138,16 @@ class Resistor:
         s = s + ", R_MAX=" + str(self._max_resistance)
         return s
 
+    def __repr__(self):
+        return 'Resistor(resistance={}, tolerance={})'.format(
+            self.resistance, self.tolerance)
+
     def to_image(self, filename=None):
         band_rects = {0: [(118, 6), (138, 72)],
                       1: [(153, 6), (173, 72)],
                       2: [(188, 6), (208, 72)],
                       3: [(238, 6), (258, 72)]}
-        
+
         band_colors = {'black': '#000000',
                        'brown': '#A05A2C',
                        'red':   '#DA0000',
