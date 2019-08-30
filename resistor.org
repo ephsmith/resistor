@@ -1,3 +1,0 @@
-* resistor.py
-** TODO Implement functionality for silver and gold 3rd bands.  
-** TODO Implement a fix of some sort for precision. 
