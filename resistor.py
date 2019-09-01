@@ -11,9 +11,10 @@ class Resistance:
     class Resistance
     """
 
-    def __init__(self, resistance):
+    def __init__(self, resistance, precision=1):
         self._resistance_si = None
         self.resistance = resistance
+        self._precision = precision
 
     @property
     def resistance(self):
@@ -28,7 +29,7 @@ class Resistance:
             if r < 0:
                 raise ValueError('Invalid value provided for resistance')
             self._resistance = r
-            self._resistance_si = si_format(r)
+            self._resistance_si = si_format(r, self._precision)
 
     @property
     def si(self):
@@ -105,8 +106,6 @@ class Resistor:
     def resistance(self, r):
         self._resistance = Resistance(r)
 
-        exponent = int('{:e}'.format(self.resistance)[-3:])
-
         digits = ''
         r_str = str(self.resistance)
         if self.resistance >= 10:
@@ -127,15 +126,12 @@ class Resistor:
         band_2 = self._color_code[int(digits[1])]
         band_4 = self._tolerance_code[self._tolerance]
 
-        self._resistance_si = self._resistance.si
         self._code = (band_1, band_2, band_3, band_4)
 
         self._min_resistance = Resistance(self.resistance *
                                           (1-self._tolerance))
-        self._min_resistance_si = self._min_resistance.si
         self._max_resistance = Resistance(self.resistance *
                                           (1+self._tolerance))
-        self._max_resistance_si = self._max_resistance.si
 
     @property
     def resistance_si(self):
@@ -148,6 +144,14 @@ class Resistor:
     @tolerance.setter
     def tolerance(self, t):
         self._tolerance = t
+
+    @property
+    def min_resistance_si(self):
+        return self._resistance.si
+
+    @property
+    def max_resistance_si(self):
+        return self._resistance.si
 
     @property
     def code(self):
