@@ -106,6 +106,8 @@ class Resistor:
     def resistance(self, r):
         self._resistance = Resistance(r)
 
+        exponent = int('{:e}'.format(self.resistance)[-3:])
+
         digits = ''
         r_str = str(self.resistance)
         if self.resistance >= 10:
