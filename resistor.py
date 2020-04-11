@@ -13,8 +13,8 @@ class Resistance:
 
     def __init__(self, resistance, precision=1):
         self._resistance_si = None
+        self.precision = precision
         self.resistance = resistance
-        self._precision = precision
 
     @property
     def resistance(self):
@@ -24,16 +24,15 @@ class Resistance:
     def resistance(self, r):
         if type(r) is str:
             self._resistance = si_parse(r)
-            self._resistance_si = r
         else:
             if r < 0:
                 raise ValueError('Invalid value provided for resistance')
             self._resistance = r
-            self._resistance_si = si_format(r, self._precision)
 
     @property
     def si(self):
-        return self._resistance_si
+        return si_format(self.resistance,
+                         precision=self.precision)
 
 
 class Resistor:
@@ -104,10 +103,9 @@ class Resistor:
 
     @resistance.setter
     def resistance(self, r):
+
         self._resistance = Resistance(r)
-
         exponent = int('{:e}'.format(self.resistance)[-3:])
-
         digits = ''
         r_str = str(self.resistance)
         if self.resistance >= 10:
@@ -176,16 +174,14 @@ class Resistor:
         self._code = None
         self._min_resistance = None
         self._max_resistance = None
-        self._min_resistance_si = None
-        self._max_resistance_si = None
         self._tolerance = tolerance or 0.05
         if resistance is not None:
             self.resistance = resistance
 
     def __str__(self):
         s = "R=" + self.resistance_si + ", CODE=" + '-'.join(self.code)
-        s = s + ", R_MIN=" + self._min_resistance_si
-        s = s + ", R_MAX=" + self._max_resistance_si
+        s = s + ", R_MIN=" + self.min_resistance_si
+        s = s + ", R_MAX=" + self.max_resistance_si
         return s
 
     def to_image(self, filename=None):
@@ -259,8 +255,8 @@ def test():
             obj = Resistor(r)
 
             """Now test for trailing zeros in min/max"""
-            val1, _ = obj._min_resistance_si.split(' ')
-            val2, _ = obj._max_resistance_si.split(' ')
+            val1, _ = obj.min_resistance_si.split(' ')
+            val2, _ = obj.max_resistance_si.split(' ')
 
             if val1[:-1] == '0' or val2[:-1] == '0':
                 print('FAIL', r)
@@ -274,8 +270,8 @@ def test():
             obj = Resistor(r, tolerance=0.1)
 
             """Now test for trailing zeros in min/max"""
-            val1, _ = obj._min_resistance_si.split(' ')
-            val2, _ = obj._max_resistance_si.split(' ')
+            val1, _ = obj.min_resistance_si.split(' ')
+            val2, _ = obj.max_resistance_si.split(' ')
 
             if val1[-1] == '0' or val2[-1] == '0':
                 print('FAIL', obj)
