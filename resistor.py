@@ -6,6 +6,35 @@ import os.path
 package_directory = os.path.dirname(os.path.abspath(__file__))
 
 
+class Resistance:
+    """
+    class Resistance
+    """
+
+    def __init__(self, resistance, precision=1):
+        self._resistance_si = None
+        self.precision = precision
+        self.resistance = resistance
+
+    @property
+    def resistance(self):
+        return self._resistance
+
+    @resistance.setter
+    def resistance(self, r):
+        if type(r) is str:
+            self._resistance = si_parse(r)
+        else:
+            if r < 0:
+                raise ValueError('Invalid value provided for resistance')
+            self._resistance = r
+
+    @property
+    def si(self):
+        return si_format(self.resistance,
+                         precision=self.precision)
+
+
 class Resistor:
     """
     class Resistor
@@ -69,37 +98,16 @@ class Resistor:
                    'silver': -2}
 
     @property
-    def ten_pct_standards(self):
-        return self._ten_pct_standards
-
-    @property
-    def five_pct_standards(self):
-        return self._five_pct_standards
-
-    @property
-    def colors(self):
-        return self._colors
-
-    @property
     def resistance(self):
-        return self._resistance
+        return self._resistance.resistance
 
     @resistance.setter
     def resistance(self, r):
-        if r:
-            if type(r) is str:
-                self._resistance = si_parse(r)
-                self._resistance_si = r
-            else:
-                if r < 0:
-                    raise ValueError('Invalid value provided for resistance')
-                self._resistance = r
-                self._resistance_si = si_format(r)
-        r_str = str(self._resistance)
 
+        self._resistance = Resistance(r)
         exponent = int('{:e}'.format(self.resistance)[-3:])
-
         digits = ''
+        r_str = str(self.resistance)
         if self.resistance >= 10:
             digits = r_str[:2]
             band_3 = self._color_code[exponent-1]
@@ -118,36 +126,16 @@ class Resistor:
         band_2 = self._color_code[int(digits[1])]
         band_4 = self._tolerance_code[self._tolerance]
 
-        if exponent % 3 == 0 or exponent == 0:
-            precision = 1
-        else:
-            precision = 0
-
-        tol_precision = precision + 1
-        if self._tolerance == 0.05:
-            if int(digits[1]) % 2 == 1 and exponent not in (-2, 2, 5, 8, 11):
-                tol_precision = precision + 2
-            else:
-                tol_precision = precision + 1
-        if self._tolerance == 0.1:
-            if exponent in (1, 3, 6, 9):
-                tol_precision = precision
-
-        self._resistance_si = si_format(r, precision=precision)
         self._code = (band_1, band_2, band_3, band_4)
 
-        self._min_resistance = self._resistance * (1-self._tolerance)
-        self._min_resistance_si = si_format(self._resistance *
-                                            (1-self._tolerance),
-                                            precision=tol_precision)
-        self._max_resistance = self._resistance * (1+self._tolerance)
-        self._max_resistance_si = si_format(self._resistance *
-                                            (1+self._tolerance),
-                                            precision=tol_precision)
+        self._min_resistance = Resistance(self.resistance *
+                                          (1-self._tolerance))
+        self._max_resistance = Resistance(self.resistance *
+                                          (1+self._tolerance))
 
     @property
     def resistance_si(self):
-        return self._resistance_si
+        return self._resistance.si
 
     @property
     def tolerance(self):
@@ -156,6 +144,14 @@ class Resistor:
     @tolerance.setter
     def tolerance(self, t):
         self._tolerance = t
+
+    @property
+    def min_resistance_si(self):
+        return self._resistance.si
+
+    @property
+    def max_resistance_si(self):
+        return self._resistance.si
 
     @property
     def code(self):
@@ -178,16 +174,14 @@ class Resistor:
         self._code = None
         self._min_resistance = None
         self._max_resistance = None
-        self._min_resistance_si = None
-        self._max_resistance_si = None
         self._tolerance = tolerance or 0.05
         if resistance is not None:
             self.resistance = resistance
 
     def __str__(self):
         s = "R=" + self.resistance_si + ", CODE=" + '-'.join(self.code)
-        s = s + ", R_MIN=" + self._min_resistance_si
-        s = s + ", R_MAX=" + self._max_resistance_si
+        s = s + ", R_MIN=" + self.min_resistance_si
+        s = s + ", R_MAX=" + self.max_resistance_si
         return s
 
     def to_image(self, filename=None):
@@ -261,8 +255,8 @@ def test():
             obj = Resistor(r)
 
             """Now test for trailing zeros in min/max"""
-            val1, _ = obj._min_resistance_si.split(' ')
-            val2, _ = obj._max_resistance_si.split(' ')
+            val1, _ = obj.min_resistance_si.split(' ')
+            val2, _ = obj.max_resistance_si.split(' ')
 
             if val1[:-1] == '0' or val2[:-1] == '0':
                 print('FAIL', r)
@@ -276,8 +270,8 @@ def test():
             obj = Resistor(r, tolerance=0.1)
 
             """Now test for trailing zeros in min/max"""
-            val1, _ = obj._min_resistance_si.split(' ')
-            val2, _ = obj._max_resistance_si.split(' ')
+            val1, _ = obj.min_resistance_si.split(' ')
+            val2, _ = obj.max_resistance_si.split(' ')
 
             if val1[-1] == '0' or val2[-1] == '0':
                 print('FAIL', obj)
