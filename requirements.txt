@@ -1,2 +1,2 @@
-Pillow==7.1.1
+Pillow==8.1.1
 si-prefix==1.2.2
