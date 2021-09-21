@@ -104,7 +104,7 @@ class Resistor:
     @resistance.setter
     def resistance(self, r):
 
-        self._resistance = Resistance(r)
+        self._resistance = Resistance(r, precision=2)
         exponent = int('{:e}'.format(self.resistance)[-3:])
         digits = ''
         r_str = str(self.resistance)
@@ -147,11 +147,11 @@ class Resistor:
 
     @property
     def min_resistance_si(self):
-        return self._resistance.si
+        return self._min_resistance.si
 
     @property
     def max_resistance_si(self):
-        return self._resistance.si
+        return self._max_resistance.si
 
     @property
     def code(self):
@@ -171,12 +171,11 @@ class Resistor:
             self.tolerance = self._tolerance_code[code[3]]
 
     def __init__(self, resistance=None, tolerance=None):
-        self._code = None
-        self._min_resistance = None
-        self._max_resistance = None
         self._tolerance = tolerance or 0.05
         if resistance is not None:
             self.resistance = resistance
+
+
 
     def __str__(self):
         s = "R=" + self.resistance_si + ", CODE=" + '-'.join(self.code)
@@ -256,22 +255,3 @@ def test():
 
             """Now test for trailing zeros in min/max"""
             val1, _ = obj.min_resistance_si.split(' ')
-            val2, _ = obj.max_resistance_si.split(' ')
-
-            if val1[:-1] == '0' or val2[:-1] == '0':
-                print('FAIL', r)
-            else:
-                print(obj)
-
-    print("10% TESTS")
-    for n in digits:
-        for x in range(-2, 10):
-            r = n * 10 ** x
-            obj = Resistor(r, tolerance=0.1)
-
-            """Now test for trailing zeros in min/max"""
-            val1, _ = obj.min_resistance_si.split(' ')
-            val2, _ = obj.max_resistance_si.split(' ')
-
-            if val1[-1] == '0' or val2[-1] == '0':
-                print('FAIL', obj)
